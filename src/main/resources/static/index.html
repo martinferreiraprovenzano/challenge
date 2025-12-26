@@ -3,6 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Challenge</title>
+  <style>
+    body { max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
+    input, select, button { margin: 5px; }
+    table { margin: 0 auto; }
+  </style>
 </head>
 
 <body>
@@ -19,11 +24,34 @@
 
 <hr>
 
-<h3>Probar suma</h3>
-<input id="sumId" placeholder="Transaction ID" />
+<h3>Gastos relacionados a una transacción:</h3>
+<input id="sumId" placeholder="ID transacción" />
 <button onclick="getSum()">Ver suma</button>
 
 <p id="result"></p>
+
+<hr>
+
+<h3>Buscar transacciones por tipo:</h3>
+<select id="typeSelect">
+  <option value="">Seleccionar tipo...</option>
+</select>
+<button onclick="getByType()">Buscar</button>
+
+<p id="typeResult"></p>
+
+<table id="typeTable" style="display:none; border-collapse: collapse; width: 100%; margin-top: 10px;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Tipo</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Monto</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Parent ID</th>
+    </tr>
+  </thead>
+  <tbody id="typeTableBody">
+  </tbody>
+</table>
 
 <script>
 async function loadNextId() {
@@ -32,7 +60,19 @@ async function loadNextId() {
   document.getElementById("id").value = data.nextId;
 }
 
+async function loadTypes() {
+  const res = await fetch("/transactions/types");
+  const types = await res.json();
+  const select = document.getElementById("typeSelect");
+  select.innerHTML = '<option value="">Seleccionar tipo...</option>';
+  select.innerHTML += '<option value="todos">Todos</option>';
+  types.forEach(type => {
+    select.innerHTML += `<option value="${type}">${type}</option>`;
+  });
+}
+
 loadNextId();
+loadTypes();
 
 document.getElementById("form").onsubmit = async e => {
   e.preventDefault();
@@ -47,9 +87,16 @@ document.getElementById("form").onsubmit = async e => {
     })
   });
 
+  if (!res.ok) {
+    const error = await res.text();
+    alert("Error: " + error);
+    return;
+  }
+
   const data = await res.json();
   alert("Transacción creada con ID: " + data.id);
   loadNextId();
+  loadTypes();
 };
 
 async function getSum() {
@@ -57,6 +104,40 @@ async function getSum() {
   const res = await fetch(`/transactions/${sumId.value}/sum`);
   const data = await res.json();
   document.getElementById("result").innerText = "Suma: " + data.sum;
+}
+
+async function getByType() {
+  const type = document.getElementById("typeSelect").value;
+  if (!type) return;
+  
+  const res = await fetch(`/transactions/types/${type}`);
+  const transactions = await res.json();
+  
+  const table = document.getElementById("typeTable");
+  const tbody = document.getElementById("typeTableBody");
+  const result = document.getElementById("typeResult");
+  
+  if (transactions.length === 0) {
+    result.innerText = `No hay transacciones del tipo "${type}"`;
+    table.style.display = "none";
+    return;
+  }
+  
+  result.innerText = type === "todos" ? `Todas las transacciones (${transactions.length}):` : `Transacciones del tipo "${type}" (${transactions.length}):`;
+  
+  tbody.innerHTML = "";
+  transactions.forEach(t => {
+    tbody.innerHTML += `
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">${t.id}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${t.type}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${t.amount}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${t.parentId || '-'}</td>
+      </tr>
+    `;
+  });
+  
+  table.style.display = "table";
 }
 </script>
 
