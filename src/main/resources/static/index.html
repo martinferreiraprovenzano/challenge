@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Challenge</title>
+</head>
+
+<body>
+
+<h2>Crear Transacción</h2>
+
+<form id="form">
+  <input id="id" placeholder="ID" readonly style="background-color: #f0f0f0;" /><br><br>
+  <input id="type" placeholder="Type" required /><br><br>
+  <input id="amount" placeholder="Amount" required /><br><br>
+  <input id="parentId" placeholder="Parent ID (opcional)" /><br><br>
+  <button>Guardar</button>
+</form>
+
+<hr>
+
+<h3>Probar suma</h3>
+<input id="sumId" placeholder="Transaction ID" />
+<button onclick="getSum()">Ver suma</button>
+
+<p id="result"></p>
+
+<script>
+async function loadNextId() {
+  const res = await fetch("/transactions/next-id");
+  const data = await res.json();
+  document.getElementById("id").value = data.nextId;
+}
+
+loadNextId();
+
+document.getElementById("form").onsubmit = async e => {
+  e.preventDefault();
+
+  const res = await fetch("/transactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type: type.value,
+      amount: Number(amount.value),
+      parentId: parentId.value || null
+    })
+  });
+
+  const data = await res.json();
+  alert("Transacción creada con ID: " + data.id);
+  loadNextId();
+};
+
+async function getSum() {
+  const sumId = document.getElementById("sumId");
+  const res = await fetch(`/transactions/${sumId.value}/sum`);
+  const data = await res.json();
+  document.getElementById("result").innerText = "Suma: " + data.sum;
+}
+</script>
+
+</body>
+</html>
