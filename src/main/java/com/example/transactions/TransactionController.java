@@ -51,9 +51,29 @@ public class TransactionController {
     }
     
     @GetMapping("/transactions/{id}/sum")
-    public Map<String, Double> getSum(@PathVariable Long id) {
+    public Map<String, Object> getSum(@PathVariable Long id) {
         double sum = calculateSum(id);
-        return Map.of("sum", sum);
+        List<Transaction> relatedTransactions = getRelatedTransactions(id);
+        return Map.of("sum", sum, "transactions", relatedTransactions);
+    }
+    
+    private List<Transaction> getRelatedTransactions(Long id) {
+        return transactions.values().stream()
+                .filter(t -> isRelated(t, id))
+                .collect(Collectors.toList());
+    }
+    
+    private boolean isRelated(Transaction t, Long targetId) {
+        if (targetId.equals(t.getId())) return true;
+        if (targetId.equals(t.getParentId())) return true;
+        return hasParent(t.getId(), targetId);
+    }
+    
+    private boolean hasParent(Long childId, Long targetParentId) {
+        Transaction child = transactions.get(childId);
+        if (child == null || child.getParentId() == null) return false;
+        if (targetParentId.equals(child.getParentId())) return true;
+        return hasParent(child.getParentId(), targetParentId);
     }
     
     private double calculateSum(Long id) {

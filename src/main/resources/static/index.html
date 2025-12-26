@@ -30,6 +30,19 @@
 
 <p id="result"></p>
 
+<table id="sumTable" style="display:none; border-collapse: collapse; width: 100%; margin-top: 10px;">
+  <thead>
+    <tr style="background-color: #f0f0f0;">
+      <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Tipo</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Monto</th>
+      <th style="border: 1px solid #ddd; padding: 8px;">Parent ID</th>
+    </tr>
+  </thead>
+  <tbody id="sumTableBody">
+  </tbody>
+</table>
+
 <hr>
 
 <h3>Buscar transacciones por tipo:</h3>
@@ -103,7 +116,28 @@ async function getSum() {
   const sumId = document.getElementById("sumId");
   const res = await fetch(`/transactions/${sumId.value}/sum`);
   const data = await res.json();
+  
   document.getElementById("result").innerText = "Suma: " + data.sum;
+  
+  const table = document.getElementById("sumTable");
+  const tbody = document.getElementById("sumTableBody");
+  
+  if (data.transactions && data.transactions.length > 0) {
+    tbody.innerHTML = "";
+    data.transactions.forEach(t => {
+      tbody.innerHTML += `
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">${t.id}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${t.type}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${t.amount}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${t.parentId || '-'}</td>
+        </tr>
+      `;
+    });
+    table.style.display = "table";
+  } else {
+    table.style.display = "none";
+  }
 }
 
 async function getByType() {
