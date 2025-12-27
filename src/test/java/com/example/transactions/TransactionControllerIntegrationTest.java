@@ -2,6 +2,9 @@ package com.example.transactions;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class TransactionControllerIntegrationTest {
 
@@ -71,5 +74,74 @@ public class TransactionControllerIntegrationTest {
         System.out.println("   ✅ Próximo ID: " + nextIdResult.get("nextId"));
         
         System.out.println("\n=== TEST COMPLETADO EXITOSAMENTE ===");
+    }
+
+    @Test
+    public void repositorySaveAndFind() {
+        InMemoryTransactionRepository repo = new InMemoryTransactionRepository();
+
+        Transaction t1 = new Transaction();
+        t1.setType("shopping");
+        t1.setAmount(100.0);
+
+        Transaction saved1 = repo.save(t1);
+        assertNotNull(saved1.getId());
+        assertTrue(repo.existsById(saved1.getId()));
+
+        Transaction t2 = new Transaction();
+        t2.setType("food");
+        t2.setAmount(50.0);
+        t2.setParentId(saved1.getId());
+
+        Transaction saved2 = repo.save(t2);
+        assertNotNull(saved2.getId());
+        assertNotEquals(saved1.getId(), saved2.getId());
+
+        java.util.Collection<Transaction> all = repo.findAll();
+        assertEquals(2, all.size());
+
+        assertEquals(1, repo.findByType("shopping").size());
+        assertEquals(1, repo.findByType("food").size());
+    }
+
+    @Test
+    public void serviceCreateAndSumAndTypes() {
+        InMemoryTransactionRepository repo = new InMemoryTransactionRepository();
+        TransactionService service = new TransactionService(repo);
+
+        Transaction parent = new Transaction();
+        parent.setType("shopping");
+        parent.setAmount(100.0);
+
+        Long id1 = service.createTransaction(parent);
+        assertEquals(1L, id1);
+
+        Transaction child = new Transaction();
+        child.setType("food");
+        child.setAmount(50.0);
+        child.setParentId(id1);
+
+        Long id2 = service.createTransaction(child);
+        assertEquals(2L, id2);
+
+        Map<String, Object> sumResult = service.getSum(id1);
+        assertEquals(150.0, (Double)sumResult.get("sum"));
+
+        List<Transaction> shopping = service.getTransactionsByType("shopping");
+        assertEquals(1, shopping.size());
+
+        Set<String> types = service.getAllTypes();
+        assertTrue(types.contains("shopping"));
+        assertTrue(types.contains("food"));
+
+        Transaction invalid = new Transaction();
+        invalid.setType("invalid");
+        invalid.setAmount(10.0);
+        invalid.setParentId(999L);
+
+        assertThrows(IllegalArgumentException.class, () -> service.createTransaction(invalid));
+
+        Map<String, Long> next = service.getNextId();
+        assertEquals(3L, next.get("nextId"));
     }
 }

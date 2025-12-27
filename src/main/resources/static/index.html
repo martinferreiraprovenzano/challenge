@@ -15,9 +15,8 @@
 <h2>Crear Transacción</h2>
 
 <form id="form">
-  <input id="id" placeholder="ID" readonly style="background-color: #f0f0f0;" /><br><br>
   <input id="type" placeholder="Type" required /><br><br>
-  <input id="amount" placeholder="Amount" required /><br><br>
+  <input id="amount"  type="number" placeholder="Amount" required /><br><br>
   <input id="parentId" placeholder="Parent ID (opcional)" /><br><br>
   <button>Guardar</button>
 </form>
@@ -67,11 +66,6 @@
 </table>
 
 <script>
-async function loadNextId() {
-  const res = await fetch("/transactions/next-id");
-  const data = await res.json();
-  document.getElementById("id").value = data.nextId;
-}
 
 async function loadTypes() {
   const res = await fetch("/transactions/types");
@@ -84,7 +78,6 @@ async function loadTypes() {
   });
 }
 
-loadNextId();
 loadTypes();
 
 document.getElementById("form").onsubmit = async e => {
@@ -108,8 +101,8 @@ document.getElementById("form").onsubmit = async e => {
 
   const data = await res.json();
   alert("Transacción creada con ID: " + data.id);
-  loadNextId();
   loadTypes();
+  document.getElementById("form").reset();
 };
 
 async function getSum() {
