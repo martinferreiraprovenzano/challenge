@@ -47,7 +47,7 @@ Respuesta:
 ```json
 { "id": 1 }
 ```
-Validaciones: si `parentId` está presente debe existir (si no existe, se lanza `IllegalArgumentException`).
+Validaciones: si `parentId` está presente debe existir (si no existe, se lanza `IllegalArgumentException`). Además, `amount` debe ser no nulo y mayor o igual a 0; de lo contrario la creación fallará con `IllegalArgumentException`.
 
 ### GET /transactions/types
 Descripción: Devuelve el set de tipos existentes. Ejemplo: `["shopping","food"]`.

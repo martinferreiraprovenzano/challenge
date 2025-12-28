@@ -17,8 +17,13 @@ public class TransactionService {
     }
 
     public Long createTransaction(Transaction transaction) {
+        // Validate parent exists
         if (transaction.getParentId() != null && !repository.existsById(transaction.getParentId())) {
             throw new IllegalArgumentException("Parent ID does not exist");
+        }
+        // Validate amount is provided and non-negative
+        if (transaction.getAmount() == null || transaction.getAmount() < 0.0) {
+            throw new IllegalArgumentException("Amount must be non-null and >= 0");
         }
         Transaction saved = repository.save(transaction);
         return saved.getId();

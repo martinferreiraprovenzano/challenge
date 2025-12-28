@@ -141,6 +141,17 @@ public class TransactionControllerIntegrationTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.createTransaction(invalid));
 
+        // Test invalid amounts (null and negative)
+        Transaction noAmount = new Transaction();
+        noAmount.setType("none");
+        // amount left null
+        assertThrows(IllegalArgumentException.class, () -> service.createTransaction(noAmount));
+
+        Transaction negative = new Transaction();
+        negative.setType("bad");
+        negative.setAmount(-5.0);
+        assertThrows(IllegalArgumentException.class, () -> service.createTransaction(negative));
+
         Map<String, Long> next = service.getNextId();
         assertEquals(3L, next.get("nextId"));
     }
